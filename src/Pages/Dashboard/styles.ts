@@ -1,0 +1,123 @@
+import type { CSSProperties } from "react";
+
+export const styles: Record<string, CSSProperties> = {
+    page: {
+        flex: 1,
+        overflow: "auto",
+        background: "#0a0a0a",
+        color: "#fff",
+        padding: "20px 16px 12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        WebkitUserSelect: "none",
+        userSelect: "none",
+    },
+    header: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+    },
+    time: {
+        fontSize: "clamp(52px, 10vw, 80px)",
+        fontWeight: 100,
+        letterSpacing: "0.02em",
+        lineHeight: 1,
+        fontVariantNumeric: "tabular-nums",
+        color: "#fff",
+    },
+    dateText: {
+        fontSize: 15,
+        color: "#888",
+        marginTop: 4,
+        fontWeight: 400,
+    },
+    section: {
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+    },
+    sectionLabel: {
+        fontSize: 11,
+        fontWeight: 700,
+        letterSpacing: "0.12em",
+        textTransform: "uppercase",
+        color: "#444",
+        marginBottom: 2,
+    },
+    nextItem: {
+        padding: "12px 14px",
+        border: "1px solid #222",
+        borderRadius: 8,
+        fontSize: 15,
+        fontWeight: 500,
+    },
+    nextItemTitle: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#fff",
+    },
+    nextItemMeta: {
+        fontSize: 13,
+        color: "#888",
+        marginTop: 2,
+    },
+    weatherRow: {
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        padding: "10px 14px",
+        border: "1px solid #222",
+        borderRadius: 8,
+    },
+    weatherTemp: {
+        fontSize: 32,
+        fontWeight: 200,
+        color: "#fff",
+    },
+    weatherDetail: {
+        fontSize: 13,
+        color: "#888",
+        lineHeight: 1.6,
+    },
+    eventRow: {
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "8px 0",
+        borderBottom: "1px solid #1a1a1a",
+    },
+    eventDot: {
+        width: 6,
+        height: 6,
+        borderRadius: "50%",
+        flexShrink: 0,
+    },
+    eventTime: {
+        fontSize: 13,
+        color: "#666",
+        minWidth: 40,
+    },
+    eventTitle: {
+        fontSize: 14,
+        color: "#ddd",
+        flex: 1,
+    },
+    statusBadge: {
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: "0.08em",
+        textTransform: "uppercase",
+        padding: "2px 6px",
+        borderRadius: 4,
+    },
+    emptyText: {
+        fontSize: 13,
+        color: "#333",
+        fontStyle: "italic",
+    },
+    errorText: {
+        fontSize: 13,
+        color: "#ef4444",
+    },
+};
