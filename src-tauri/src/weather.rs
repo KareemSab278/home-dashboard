@@ -1,4 +1,4 @@
-use crate::models::{WeatherCurrent, WeatherData};
+use crate::types::{WeatherCurrent, WeatherData};
 
 #[tauri::command]
 pub async fn get_weather() -> Result<WeatherCurrent, String> {

@@ -14,6 +14,19 @@ pub enum ItemStatus {
     Dismissed,
 }
 
+impl ItemStatus {
+    pub fn from_str(value: &str) -> Self {
+        match value {
+            "due_soon" => ItemStatus::DueSoon,
+            "due" => ItemStatus::Due,
+            "overdue" => ItemStatus::Overdue,
+            "completed" => ItemStatus::Completed,
+            "dismissed" => ItemStatus::Dismissed,
+            _ => ItemStatus::Upcoming,
+        }
+    }
+}
+
 // ── reminders ─────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

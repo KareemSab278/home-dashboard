@@ -1,4 +1,4 @@
-use crate::models::{DashboardData, Reminder, RemindersResult};
+use crate::types::{DashboardData, Reminder, RemindersResult};
 
 #[tauri::command]
 pub async fn get_dashboard() -> Result<DashboardData, String> {
