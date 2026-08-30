@@ -2,7 +2,6 @@ import { DashboardPage } from "./Pages/Dashboard/Dashboard";
 import { CalendarPage } from "./Pages/Calendar/Calendar";
 import { WeatherPage } from "./Pages/Weather/Weather";
 import { RemindersPage } from "./Pages/Reminders/Reminders";
-import { SettingsPage } from "./Pages/Settings/Settings";
 import { JSX } from "react";
 
 export const routes: { path: string; element: JSX.Element }[] = [
@@ -10,5 +9,4 @@ export const routes: { path: string; element: JSX.Element }[] = [
     { path: "/calendar", element: <CalendarPage /> },
     { path: "/weather", element: <WeatherPage /> },
     { path: "/reminders", element: <RemindersPage /> },
-    { path: "/settings", element: <SettingsPage /> },
 ];

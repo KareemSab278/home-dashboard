@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Dashboard Reminders</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        color: #ffffff;
+        background: #000000;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        background: #000000;
+        color: #ffffff;
+        padding: 24px;
+      }
+      .page {
+        max-width: 1150px;
+        margin: 0 auto;
+        display: grid;
+        gap: 24px;
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      h1 {
+        font-size: 2.1rem;
+        letter-spacing: -0.04em;
+      }
+      p {
+        color: #cccccc;
+        margin-top: 8px;
+      }
+      .panel {
+        background: #111111;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 24px;
+      }
+      .grid-2 {
+        display: grid;
+        gap: 24px;
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+      .calendar {
+        display: grid;
+        gap: 16px;
+      }
+      .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .day,
+      .weekday {
+        border-radius: 16px;
+        padding: 12px 10px;
+        text-align: center;
+        font-size: 0.88rem;
+      }
+      .weekday {
+        color: #aaaaaa;
+      }
+      .day {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .day.today {
+        border: 1px solid #ffffff;
+      }
+      .day.event {
+        background: rgba(255, 255, 255, 0.12);
+      }
+      .day.disabled {
+        color: #555555;
+      }
+      .reminder-list {
+        display: grid;
+        gap: 12px;
+      }
+      .reminder-card {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+      }
+      .reminder-card strong {
+        display: block;
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: #ffffff;
+      }
+      .tags {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .tag {
+        color: #ffffff;
+        font-size: 0.8rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        padding: 5px 10px;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      button,
+      input,
+      select {
+        border: none;
+        outline: none;
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 11px 18px;
+        background: #ffffff;
+        color: #000000;
+        transition: transform 0.2s ease, opacity 0.2s ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        opacity: 0.95;
+      }
+      .form-row {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .form-row input,
+      .form-row button {
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+        padding: 14px 16px;
+        border-radius: 16px;
+        min-width: 0;
+      }
+      .form-row input::placeholder {
+        color: #aaaaaa;
+      }
+      .form-row button {
+        background: #ffffff;
+        color: #000000;
+        grid-column: span 3;
+      }
+      @media (max-width: 900px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+        .form-row button {
+          grid-column: span 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header>
+        <div>
+          <h1>Reminders Dashboard</h1>
+        </div>
+      </header>
+
+      <section class="grid-2">
+        <div class="panel calendar">
+          <div class="calendar-header">
+            <div>
+              <div id="monthLabel" style="font-size:1.05rem;font-weight:700;"></div>
+              <div id="todayLabel" style="color:#7b8191;margin-top:6px;"></div>
+            </div>
+            <button type="button" id="refreshButton">Refresh</button>
+          </div>
+          <div class="calendar-days" id="weekdayRow"></div>
+          <div class="calendar-days" id="daysGrid"></div>
+        </div>
+
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div>
+              <strong style="font-size:1.05rem;">Add new event</strong>
+              <div style="color:#7b8191;margin-top:4px;font-size:0.94rem;">Create reminders for today or later.</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <input id="titleInput" type="text" placeholder="Event title" />
+            <input id="dateInput" type="date" />
+            <input id="timeInput" type="time" />
+            <button id="addButton" type="button">Add reminder</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <strong style="font-size:1.05rem;">All reminders</strong>
+            <div style="color:#7b8191;margin-top:4px;font-size:0.94rem;">Swipe through previous and upcoming items in one list.</div>
+          </div>
+        </div>
+        <div class="reminder-list" id="reminderList"></div>
+      </section>
+    </div>
+
+    <script>
+      const state = { reminders: [] };
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+
+      function formatDate(value) {
+        const date = new Date(value);
+        return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', weekday: 'short' }).format(date);
+      }
+
+      function groupByDay(reminders) {
+        return reminders.reduce((map, item) => {
+          const key = item.due_date;
+          (map[key] ||= []).push(item);
+          return map;
+        }, {});
+      }
+
+      function renderCalendar() {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const monthLabel = document.getElementById('monthLabel');
+        const todayLabel = document.getElementById('todayLabel');
+        const weekdayRow = document.getElementById('weekdayRow');
+        const daysGrid = document.getElementById('daysGrid');
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        monthLabel.textContent = `${monthNames[today.getMonth()]} ${today.getFullYear()}`;
+        todayLabel.textContent = `Today · ${formatDate(today.toISOString().slice(0, 10))}`;
+        weekdayRow.innerHTML = dayNames.map((name) => `<div class="weekday">${name}</div>`).join('');
+
+        const remindersByDay = groupByDay(state.reminders);
+        const firstDay = startOfMonth.getDay();
+        const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+        daysGrid.innerHTML = '';
+
+        for (let i = 0; i < firstDay; i += 1) {
+          daysGrid.innerHTML += '<div class="day disabled"></div>';
+        }
+
+        for (let day = 1; day <= daysInMonth; day += 1) {
+          const iso = new Date(today.getFullYear(), today.getMonth(), day)
+            .toISOString()
+            .slice(0, 10);
+          const isToday = iso === today.toISOString().slice(0, 10);
+          const reminderCount = remindersByDay[iso]?.length || 0;
+          const classes = ['day'];
+          if (isToday) classes.push('today');
+          if (reminderCount) classes.push('event');
+
+          daysGrid.innerHTML += `
+            <div class="${classes.join(' ')}">
+              <div style="font-weight:700; margin-bottom:6px;">${day}</div>
+              ${reminderCount ? `<div style="font-size:0.78rem;color:#8fd9ff;">${reminderCount} event${reminderCount > 1 ? 's' : ''}</div>` : ''}
+            </div>`;
+        }
+      }
+
+      function renderReminders() {
+        const list = document.getElementById('reminderList');
+        const sorted = [...state.reminders].sort((a, b) => a.due_date.localeCompare(b.due_date) || (a.due_time || '').localeCompare(b.due_time || ''));
+        list.innerHTML = sorted
+          .map((item) => {
+            const dueTime = item.due_time ? ` · ${item.due_time}` : '';
+            return `
+              <div class="reminder-card">
+                <div>
+                  <strong>${item.title}</strong>
+                  <div class="tags"><span class="tag">${item.due_date}${dueTime}</span><span class="tag">${item.status.replace('_', ' ')}</span></div>
+                </div>
+                <div class="actions">
+                  <button type="button" onclick="deleteReminder('${item.id}')">Delete</button>
+                </div>
+              </div>`;
+          })
+          .join('');
+        if (!sorted.length) {
+          list.innerHTML = '<div style="padding:24px 0; color:#7b8191;">No reminders yet — add one over there.</div>';
+        }
+      }
+
+      async function loadReminders() {
+        const response = await fetch('/api/reminders');
+        state.reminders = await response.json();
+        renderCalendar();
+        renderReminders();
+      }
+
+      async function addReminder() {
+        const titleInput = document.getElementById('titleInput');
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        const title = titleInput.value.trim();
+        const due_date = dateInput.value;
+        const due_time = timeInput.value || null;
+
+        if (!title || !due_date) {
+          alert('Please provide both a title and a date.');
+          return;
+        }
+
+        const response = await fetch('/api/reminders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, due_date, due_time }),
+        });
+
+        if (response.ok) {
+          titleInput.value = '';
+          dateInput.value = '';
+          timeInput.value = '';
+          await loadReminders();
+        } else {
+          alert('Unable to create reminder.');
+        }
+      }
+
+      async function deleteReminder(id) {
+        const response = await fetch(`/api/reminders?id=${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+        });
+        if (response.ok) {
+          await loadReminders();
+        } else {
+          alert('Unable to delete reminder.');
+        }
+      }
+
+      document.getElementById('addButton').addEventListener('click', addReminder);
+      document.getElementById('refreshButton').addEventListener('click', loadReminders);
+      loadReminders();
+    </script>
+  </body>
+</html>

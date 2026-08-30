@@ -1,16 +1,57 @@
 use crate::db;
 use crate::types::{CreateReminderInput, EditReminderInput, ItemStatus, Reminder, RemindersResult};
+use chrono::{Local, NaiveDate, NaiveDateTime, NaiveTime};
 use rusqlite::{params, Row};
 
-fn row_to_reminder(row: &Row) -> rusqlite::Result<Reminder> {
+fn compute_status(due_date: &str, due_time: Option<&str>) -> ItemStatus {
+    let now = Local::now().naive_local();
+    let today = now.date();
+    let Ok(date) = NaiveDate::parse_from_str(due_date, "%Y-%m-%d") else {
+        return ItemStatus::Upcoming;
+    };
+    if date < today {
+        return ItemStatus::Overdue;
+    }
+    if date > today {
+        return ItemStatus::Upcoming;
+    }
+    match due_time {
+        None => ItemStatus::Due,
+        Some(t) => {
+            let Ok(time) = NaiveTime::parse_from_str(t, "%H:%M") else {
+                return ItemStatus::Due;
+            };
+            let diff = NaiveDateTime::new(date, time) - now;
+            if diff.num_minutes() < 0 {
+                ItemStatus::Overdue
+            } else if diff.num_minutes() <= 60 {
+                ItemStatus::DueSoon
+            } else {
+                ItemStatus::Due
+            }
+        }
+    }
+}
+
+pub(crate) fn row_to_reminder(row: &Row) -> rusqlite::Result<Reminder> {
+    let due_date: String = row.get(2)?;
+    let due_time: Option<String> = row.get(3)?;
     let status_text: String = row.get(4)?;
+    let completed = row.get::<_, i64>(5)? != 0;
+    let status = if completed || status_text == "completed" {
+        ItemStatus::Completed
+    } else if status_text == "dismissed" {
+        ItemStatus::Dismissed
+    } else {
+        compute_status(&due_date, due_time.as_deref())
+    };
     Ok(Reminder {
         id: row.get::<_, i64>(0)?.to_string(),
         title: row.get(1)?,
-        due_date: row.get(2)?,
-        due_time: row.get(3)?,
-        status: ItemStatus::from_str(&status_text),
-        completed: row.get::<_, i64>(5)? != 0,
+        due_date,
+        due_time,
+        status,
+        completed,
     })
 }
 

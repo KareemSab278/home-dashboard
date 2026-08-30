@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Dashboard } from "@/Helpers/Dashboard/Dashboard";
-import type { DashboardData, ItemStatus } from "@/Types";
+import type { RemindersResult, ItemStatus, WeatherData } from "@/Types";
 import { STATUS_COLORS } from "@/Types";
 import { styles } from "./styles";
+import { Reminders } from "@/Helpers/Reminders/Reminders";
+import { Weather } from "@/Helpers/Weather/Weather";
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -35,16 +36,21 @@ const StatusBadge = ({ status }: { status: ItemStatus }) => (
 
 export const DashboardPage = () => {
     const [time, setTime] = useState(formatTime());
-    const [data, setData] = useState<DashboardData | null>(null);
+    const [data, setData] = useState<RemindersResult | null>(null);
+    const [weather, setWeather] = useState<WeatherData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const intervalRef = useRef<number | null>(null);
 
     const load = async () => {
         try {
-            const result = await Dashboard.get();
-            setData(result);
+            const [reminders, weather] = await Promise.all([Reminders.get(), Weather.get()]);
+            console.log("Dashboard loaded weather:", weather);
+
+            setData(reminders);
+            setWeather(weather);
             setError(null);
-        } catch {
+        } catch (err) {
+            console.error("Dashboard load failed:", err);
             setError("dashboard_unavailable");
         }
     };
@@ -80,7 +86,7 @@ export const DashboardPage = () => {
         const now = new Date();
         return dueDate > now;
     }) ?? null;
-    const weather = data?.weather ?? null;
+    // const weather = data?.weather ?? null;
 
     return (
         <div style={styles.page}>
@@ -116,15 +122,15 @@ export const DashboardPage = () => {
                     <div style={styles.sectionLabel}>Weather</div>
                     <div style={styles.weatherRow}>
                         <div style={styles.weatherTemp}>
-                            {weather.temperature != null ? `${weather.temperature}°` : "—"}
+                            {weather.current.temperature != null ? `${weather.current.temperature}°` : "—"}
                         </div>
                         <div style={styles.weatherDetail}>
-                            {weather.description && <div>{weather.description}</div>}
-                            {weather.rain_probability != null && (
-                                <div>Rain {weather.rain_probability}%</div>
+                            {weather.current.description && <div>{weather.current.description}</div>}
+                            {weather.current.rain_probability != null && (
+                                <div>Rain {weather.current.rain_probability}%</div>
                             )}
-                            {weather.high != null && weather.low != null && (
-                                <div>↑{weather.high}° ↓{weather.low}°</div>
+                            {weather.current.high != null && weather.current.low != null && (
+                                <div>↑{weather.current.high}° ↓{weather.current.low}°</div>
                             )}
                         </div>
                     </div>

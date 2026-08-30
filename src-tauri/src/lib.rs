@@ -3,12 +3,15 @@ mod weather;
 mod reminders;
 mod system;
 mod db;
+mod server;
 mod types;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // am i allowed to put this here? 
     db::initialize_reminders_db().unwrap();
+    server::start();
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
@@ -17,7 +20,6 @@ pub fn run() {
             dashboard::get_upcoming_items,
             dashboard::get_next_item,
             weather::get_weather,
-            weather::get_weather_forecast,
             reminders::get_reminders,
             reminders::create_reminder,
             reminders::edit_reminder,

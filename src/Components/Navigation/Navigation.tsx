@@ -6,7 +6,6 @@ const NAV_ITEMS = [
     { label: "Calendar", path: "/calendar" },
     { label: "Weather", path: "/weather" },
     { label: "Reminders", path: "/reminders" },
-    { label: "Settings", path: "/settings" },
 ] as const;
 
 export const Navigation = () => {

@@ -15,10 +15,12 @@ export const WeatherPage = () => {
 
     const load = async () => {
         try {
-            const result = await Weather.getForecast();
+            const result = await Weather.get();
+            console.log("WeatherPage loaded data:", result);
             setData(result);
             setError(null);
-        } catch {
+        } catch (err) {
+            console.error("WeatherPage load failed:", err);
             setError("weather_unavailable");
         }
     };
@@ -67,7 +69,7 @@ export const WeatherPage = () => {
                                 <div style={styles.forecastDay}>{shortDay(day.date)}</div>
                                 <div style={styles.forecastHigh}>{day.high}°</div>
                                 <div style={styles.forecastLow}>{day.low}°</div>
-                                {day.rain_probability > 0 && (
+                                {day.rain_probability != null && day.rain_probability > 0 && (
                                     <div style={styles.forecastRain}>{day.rain_probability}%</div>
                                 )}
                             </div>

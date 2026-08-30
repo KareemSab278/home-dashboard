@@ -15,17 +15,6 @@ export type Reminder = {
     completed: boolean;
 };
 
-type DashboardNow = {
-    time: string;
-    date: string;
-    timestamp: string;
-};
-
-export type DashboardData = {
-    now: DashboardNow;
-    weather: WeatherCurrent | null;
-    reminders: Reminder[]; // this should be for all time after today.
-};
 
 export type CreateReminderInput = {
     title: string;
@@ -43,7 +32,7 @@ export type RemindersResult = {
     reminders: Reminder[];
 };
 
-export type WeatherCurrent = {
+type WeatherCurrent = {
     temperature: number | null;
     feels_like: number | null;
     high: number | null;
@@ -56,7 +45,7 @@ export type WeatherCurrent = {
     icon: string | null;
 };
 
-export type WeatherForecastDay = {
+type WeatherForecastDay = {
     date: string;
     high: number | null;
     low: number | null;

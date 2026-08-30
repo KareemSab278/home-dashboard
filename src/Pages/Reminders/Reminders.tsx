@@ -124,7 +124,7 @@ export const RemindersPage = () => {
 
     const handleSaveEdit = async (id: string, draft: EditDraft) => {
         try {
-            const result = await Reminders.update(id, {
+            const result = await Reminders.edit(id, {
                 title: draft.title,
                 due_date: draft.due_date,
                 due_time: draft.due_time || null,
