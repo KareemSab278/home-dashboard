@@ -75,6 +75,46 @@ pub async fn get_reminders() -> Result<RemindersResult, String> {
 }
 
 #[tauri::command]
+pub async fn get_reminders_for_date(date: String) -> Result<RemindersResult, String> {
+    let conn = db::open_reminders_connection().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT * FROM reminders
+             WHERE due_date = ?1
+             ORDER BY due_date ASC, due_time IS NULL, due_time ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let reminders = stmt
+        .query_map([date], |row| row_to_reminder(row))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(RemindersResult { reminders })
+}
+
+#[tauri::command]
+pub async fn get_reminders_for_range(start: String, end: String) -> Result<RemindersResult, String> {
+    let conn = db::open_reminders_connection().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare(
+            "SELECT * FROM reminders
+             WHERE due_date BETWEEN ?1 AND ?2
+             ORDER BY due_date ASC, due_time IS NULL, due_time ASC",
+        )
+        .map_err(|e| e.to_string())?;
+
+    let reminders = stmt
+        .query_map((start, end), |row| row_to_reminder(row))
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(RemindersResult { reminders })
+}
+
+#[tauri::command]
 pub async fn create_reminder(reminder: CreateReminderInput) -> Result<RemindersResult, String> {
     let conn = db::open_reminders_connection().map_err(|e| e.to_string())?;
     conn.execute(

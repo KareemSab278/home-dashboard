@@ -15,7 +15,7 @@ export const styles: Record<string, CSSProperties> = {
     },
     title: {
         fontSize: 22,
-        fontWeight: 300,
+        fontWeight: 600,
         letterSpacing: "0.04em",
         color: "#fff",
     },
@@ -33,12 +33,12 @@ export const styles: Record<string, CSSProperties> = {
     },
     tempLarge: {
         fontSize: 52,
-        fontWeight: 100,
+        fontWeight: 700,
         color: "#fff",
         lineHeight: 1,
     },
     feelsLike: {
-        fontSize: 13,
+        fontSize: 17,
         color: "#555",
         marginTop: 4,
     },
@@ -49,13 +49,13 @@ export const styles: Record<string, CSSProperties> = {
         gap: 4,
     },
     description: {
-        fontSize: 16,
-        fontWeight: 400,
+        fontSize: 30,
+        fontWeight: 600,
         color: "#ccc",
     },
     metaRow: {
-        fontSize: 13,
-        color: "#666",
+        fontSize: 18,
+        color: "#aeadad",
     },
     sectionLabel: {
         fontSize: 11,
@@ -87,13 +87,23 @@ export const styles: Record<string, CSSProperties> = {
         textTransform: "uppercase",
     },
     forecastHigh: {
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: 500,
         color: "#fff",
     },
     forecastLow: {
-        fontSize: 13,
-        color: "#555",
+        fontSize: 18,
+        color: "#838383",
+    },
+    forecastIcon: {
+        width: 40,
+        height: 40,
+        objectFit: "contain",
+    },
+    currentIcon: {
+        width: 48,
+        height: 48,
+        objectFit: "contain",
     },
     forecastRain: {
         fontSize: 11,

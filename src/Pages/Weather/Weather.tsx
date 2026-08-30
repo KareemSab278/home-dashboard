@@ -34,6 +34,12 @@ export const WeatherPage = () => {
     const current = data?.current ?? null;
     const forecast = data?.forecast ?? [];
 
+    const currentIconUrl = current?.icon
+        ? current.icon.startsWith("//")
+            ? `https:${current.icon}`
+            : current.icon
+        : undefined;
+
     return (
         <div style={styles.page}>
             <div style={styles.title}>Weather</div>
@@ -44,10 +50,17 @@ export const WeatherPage = () => {
                 <div style={styles.currentCard}>
                     <div style={styles.tempBlock}>
                         <div style={styles.tempLarge}>{current.temperature}°</div>
-                        <div style={styles.feelsLike}>feels {current.feels_like}°</div>
+                        <div style={styles.feelsLike}>feels like {current.feels_like}°</div>
                     </div>
                     <div style={styles.detailBlock}>
                         <div style={styles.description}>{current.description}</div>
+                        {currentIconUrl && (
+                            <img
+                                src={currentIconUrl}
+                                alt={current.description ?? "weather icon"}
+                                style={styles.currentIcon}
+                            />
+                        )}
                         <div style={styles.metaRow}>↑{current.high}° ↓{current.low}°</div>
                         <div style={styles.metaRow}>Rain {current.rain_probability}%</div>
                         <div style={styles.metaRow}>Wind {current.wind_speed} km/h</div>
@@ -64,16 +77,36 @@ export const WeatherPage = () => {
                 <>
                     <div style={styles.sectionLabel}>10-Day Forecast</div>
                     <div style={styles.forecastGrid}>
-                        {forecast.map((day, i) => (
-                            <div key={i} style={styles.forecastCell}>
-                                <div style={styles.forecastDay}>{shortDay(day.date)}</div>
-                                <div style={styles.forecastHigh}>{day.high}°</div>
-                                <div style={styles.forecastLow}>{day.low}°</div>
-                                {day.rain_probability != null && day.rain_probability > 0 && (
-                                    <div style={styles.forecastRain}>{day.rain_probability}%</div>
-                                )}
-                            </div>
-                        ))}
+                        {forecast.map((day, i) => {
+                            const iconUrl = day.icon
+                                ? day.icon.startsWith("//")
+                                    ? `https:${day.icon}`
+                                    : day.icon
+                                : undefined;
+
+                            return (
+                                <div key={i} style={styles.forecastCell}>
+                                    <div style={styles.forecastDay}>{shortDay(day.date)}</div>
+                                    {iconUrl && (
+                                        <img
+                                            src={iconUrl}
+                                            alt={day.description ?? "forecast icon"}
+                                            style={styles.forecastIcon}
+                                        />
+                                    )}
+                                    <div style={styles.forecastHigh}>
+                                        ↑ {day.high != null ? Number(day.high).toFixed(1) : "—"}°
+                                    </div>
+
+                                    <div style={styles.forecastLow}>
+                                        ↓ {day.low != null ? Number(day.low).toFixed(1) : "—"}°
+                                    </div>
+                                    {day.rain_probability != null && day.rain_probability > 0 && (
+                                        <div style={styles.forecastRain}>💧 {day.rain_probability}%</div>
+                                    )}
+                                </div>
+                            );
+                        })}
                     </div>
                 </>
             )}

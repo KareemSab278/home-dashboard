@@ -21,6 +21,8 @@ pub fn run() {
             dashboard::get_next_item,
             weather::get_weather,
             reminders::get_reminders,
+            reminders::get_reminders_for_date,
+            reminders::get_reminders_for_range,
             reminders::create_reminder,
             reminders::edit_reminder,
             reminders::complete_reminder,

@@ -59,9 +59,9 @@ export const styles: Record<string, CSSProperties> = {
         textAlign: "center",
         padding: "10px 4px",
         borderRadius: 6,
-        fontSize: 14,
+        fontSize: 20,
         cursor: "pointer",
-        color: "#888",
+        color: "#a7a7a7",
         touchAction: "manipulation",
     },
     dayCellToday: {
