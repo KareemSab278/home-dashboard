@@ -1,17 +1,10 @@
-use crate::models::{CreateReminderInput, RemindersResult, UpdateReminderInput};
+use crate::models::{CreateReminderInput, RemindersResult, EditReminderInput};
+// these will run the sql queries for managing reminders
+
+// should probably create an abstraction for it.
 
 #[tauri::command]
 pub async fn get_reminders() -> Result<RemindersResult, String> {
-    unimplemented!()
-}
-
-#[tauri::command]
-pub async fn get_reminders_for_date(date: String) -> Result<RemindersResult, String> {
-    unimplemented!()
-}
-
-#[tauri::command]
-pub async fn get_reminders_for_range(start: String, end: String) -> Result<RemindersResult, String> {
     unimplemented!()
 }
 
@@ -21,7 +14,7 @@ pub async fn create_reminder(reminder: CreateReminderInput) -> Result<RemindersR
 }
 
 #[tauri::command]
-pub async fn update_reminder(id: String, reminder: UpdateReminderInput) -> Result<RemindersResult, String> {
+pub async fn edit_reminder(id: String, reminder: EditReminderInput) -> Result<RemindersResult, String> {
     unimplemented!()
 }
 

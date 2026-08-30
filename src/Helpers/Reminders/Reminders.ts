@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { CreateReminderInput, RemindersResult, UpdateReminderInput } from "../../Types";
+import type { CreateReminderInput, RemindersResult, EditReminderInput } from "../../Types";
 
 export const Reminders = {
     get: async (): Promise<RemindersResult> =>
@@ -14,8 +14,8 @@ export const Reminders = {
     create: async (reminder: CreateReminderInput): Promise<RemindersResult> =>
         await invoke("create_reminder", { reminder }),
 
-    update: async (id: string, reminder: UpdateReminderInput): Promise<RemindersResult> =>
-        await invoke("update_reminder", { id, reminder }),
+    edit: async (id: string, reminder: EditReminderInput): Promise<RemindersResult> =>
+        await invoke("edit_reminder", { id, reminder }),
 
     complete: async (id: string): Promise<RemindersResult> =>
         await invoke("complete_reminder", { id }),

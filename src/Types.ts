@@ -15,13 +15,25 @@ export type Reminder = {
     completed: boolean;
 };
 
+type DashboardNow = {
+    time: string;
+    date: string;
+    timestamp: string;
+};
+
+export type DashboardData = {
+    now: DashboardNow;
+    weather: WeatherCurrent | null;
+    reminders: Reminder[]; // this should be for all time after today.
+};
+
 export type CreateReminderInput = {
     title: string;
     due_date: string;
     due_time: string | null;
 };
 
-export type UpdateReminderInput = {
+export type EditReminderInput = {
     title?: string;
     due_date?: string;
     due_time?: string | null;
@@ -55,22 +67,9 @@ export type WeatherForecastDay = {
 
 export type WeatherData = {
     current: WeatherCurrent;
-    forecast: WeatherForecastDay[];
+    forecast: WeatherForecastDay[]; // for 10 days or something
 };
 
-type DashboardNow = {
-    time: string;
-    date: string;
-    timestamp: string;
-};
-
-export type DashboardData = {
-    now: DashboardNow;
-    weather: WeatherCurrent | null;
-    today: Reminder[];
-    tomorrow: Reminder[];
-    next: Reminder | null;
-};
 
 export const STATUS_COLORS: Record<ItemStatus, string> = {
     upcoming: "#22c55e",

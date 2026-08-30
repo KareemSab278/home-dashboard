@@ -61,9 +61,25 @@ export const DashboardPage = () => {
         return () => clearInterval(id);
     }, []);
 
-    const todayReminders = data?.today ?? [];
-    const tomorrowReminders = data?.tomorrow ?? [];
-    const next = data?.next ?? null;
+    const reminders = data?.reminders ?? [];
+    const todayReminders = reminders.filter(reminder => {
+        const today = new Date();
+        const dueDate = new Date(reminder.due_date);
+        return dueDate.toDateString() === today.toDateString();
+    });
+
+    const tomorrowReminders = reminders.filter(reminder => {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dueDate = new Date(reminder.due_date);
+        return dueDate.toDateString() === tomorrow.toDateString();
+    });
+    
+    const next = reminders.find(reminder => {
+        const dueDate = new Date(reminder.due_date);
+        const now = new Date();
+        return dueDate > now;
+    }) ?? null;
     const weather = data?.weather ?? null;
 
     return (

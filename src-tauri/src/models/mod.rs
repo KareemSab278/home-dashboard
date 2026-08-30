@@ -40,7 +40,7 @@ pub struct CreateReminderInput {
 
 // None = don't change; Some(None) = clear; Some(Some(v)) = set
 #[derive(Debug, Deserialize)]
-pub struct UpdateReminderInput {
+pub struct EditReminderInput {
     pub title: Option<String>,
     pub due_date: Option<String>,
     pub due_time: Option<Option<String>>,
@@ -91,8 +91,6 @@ pub struct DashboardNow {
 pub struct DashboardData {
     pub now: DashboardNow,
     pub weather: Option<WeatherCurrent>,
-    pub today: Vec<Reminder>,
-    pub tomorrow: Vec<Reminder>,
-    pub next: Option<Reminder>,
+    pub reminders: Vec<Reminder>,
 }
 
