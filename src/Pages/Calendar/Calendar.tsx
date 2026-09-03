@@ -32,8 +32,8 @@ const DayModal = ({
     onComplete: (id: string) => void;
     onDelete: (id: string) => void;
 }) => (
-    <div style={styles.modalOverlay} onPointerDown={onClose}>
-        <div style={styles.modal} onPointerDown={(e) => e.stopPropagation()}>
+    <div style={styles.modalOverlay} onClick={onClose}>
+        <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalTitle}>{formatModalDate(dateKey)}</div>
             {reminders.length === 0 ? (
                 <>
@@ -169,7 +169,7 @@ export const CalendarPage = () => {
                                 ...(isToday ? styles.dayCellToday : {}),
                                 ...(hasReminder && !isToday ? { fontWeight: 600, color: "#ccc" } : {}),
                             }}
-                            onPointerDown={() => setSelectedDate(key)}
+                            onClick={() => setSelectedDate(key)}
                         >
                             {day}
                             {hasReminder && (

@@ -19,7 +19,7 @@ const baseBtn = ({ title, onClick, onNavigateTo, style }: BaseBtnProps) => {
     const navigate = useNavigate();
     const { pathname } = useLocation();
 
-    return <button onPointerDown={() => {
+    return <button onClick={() => {
         if (onNavigateTo) navigate(onNavigateTo);
         onClick();
     }} style={onNavigateTo ? {
