@@ -13,7 +13,7 @@ html, body, #root {
     -moz-osx-font-smoothing: grayscale;
     /* Scale the entire app up for the 7-inch touch display.
        Adjust this value if the UI feels too large or too small. */
-    zoom: 1.35;
+    zoom: 1.2;
 }
 
 button {
