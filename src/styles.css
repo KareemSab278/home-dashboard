@@ -11,6 +11,9 @@ html, body, #root {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Scale the entire app up for the 7-inch touch display.
+       Adjust this value if the UI feels too large or too small. */
+    zoom: 1.35;
 }
 
 button {
