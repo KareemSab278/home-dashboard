@@ -11,6 +11,8 @@ root.render(
     </React.StrictMode>,
 );
 
-getCurrentWindow().setFullscreen(true).catch((err) => {
-    console.error("Failed to set fullscreen:", err);
-});
+setTimeout(() => {
+    getCurrentWindow().setFullscreen(true).catch((err) => {
+        console.error("Failed to set fullscreen:", err);
+    });
+}, 3000);
