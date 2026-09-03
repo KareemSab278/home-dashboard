@@ -46,13 +46,17 @@ const ReminderRow = ({
                 <div style={{ display: "flex", gap: 8 }}>
                     <input
                         style={{ ...styles.input, flex: 1 }}
-                        type="date"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="YYYY-MM-DD"
                         value={draft.due_date}
                         onChange={(e) => setDraft((d) => ({ ...d, due_date: e.target.value }))}
                     />
                     <input
                         style={{ ...styles.input, flex: 1 }}
-                        type="time"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="HH:MM"
                         value={draft.due_time}
                         onChange={(e) => setDraft((d) => ({ ...d, due_time: e.target.value }))}
                     />
@@ -171,13 +175,17 @@ export const RemindersPage = () => {
                     <div style={{ display: "flex", gap: 8 }}>
                         <input
                             style={{ ...styles.input, flex: 1 }}
-                            type="date"
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="YYYY-MM-DD"
                             value={newDraft.due_date}
                             onChange={(e) => setNewDraft((d) => ({ ...d, due_date: e.target.value }))}
                         />
                         <input
                             style={{ ...styles.input, flex: 1 }}
-                            type="time"
+                            type="text"
+                            inputMode="numeric"
+                            placeholder="HH:MM"
                             value={newDraft.due_time}
                             onChange={(e) => setNewDraft((d) => ({ ...d, due_time: e.target.value }))}
                         />
