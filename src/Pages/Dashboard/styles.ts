@@ -4,6 +4,7 @@ export const styles: Record<string, CSSProperties> = {
     page: {
         flex: 1,
         overflow: "auto",
+        minHeight: 0,
         background: "#0a0a0a",
         color: "#fff",
         padding: "20px 16px 12px",
