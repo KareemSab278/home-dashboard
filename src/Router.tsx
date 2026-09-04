@@ -7,8 +7,7 @@ import type { CSSProperties } from "react";
 const shell: CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    height: "100dvh",
-    overflow: "hidden",
+    minHeight: "100dvh",
     background: "#0a0a0a",
 };
 
