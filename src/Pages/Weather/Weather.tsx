@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Weather } from "@/Helpers/Weather/Weather";
 import type { WeatherData } from "@/Types";
 import { styles } from "./styles";
+import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 
 const REFRESH_INTERVAL_MS = 5 * 60_000;
 
@@ -9,6 +10,7 @@ const shortDay = (dateStr: string) =>
     new Date(dateStr).toLocaleDateString("en-GB", { weekday: "short" });
 
 export const WeatherPage = () => {
+    const pageRef = useDragScroll();
     const [data, setData] = useState<WeatherData | null>(null);
     const [error, setError] = useState<string | null>(null);
     const intervalRef = useRef<number | null>(null);
@@ -41,7 +43,7 @@ export const WeatherPage = () => {
         : undefined;
 
     return (
-        <div style={styles.page}>
+        <div ref={pageRef} style={styles.page}>
             <div style={styles.title}>Weather</div>
 
             {error && <span style={styles.errorText}>Could not load weather data.</span>}

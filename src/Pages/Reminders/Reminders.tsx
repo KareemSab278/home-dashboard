@@ -4,6 +4,7 @@ import { Buttons } from "@/Components/Button/Button";
 import type { Reminder } from "@/Types";
 import { STATUS_COLORS } from "@/Types";
 import { styles } from "./styles";
+import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -94,6 +95,7 @@ const ReminderRow = ({
 };
 
 export const RemindersPage = () => {
+    const pageRef = useDragScroll();
     const [reminders, setReminders] = useState<Reminder[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [showAdd, setShowAdd] = useState(false);
@@ -155,7 +157,7 @@ export const RemindersPage = () => {
     const done = reminders.filter((r) => r.status === "completed" || r.status === "dismissed");
 
     return (
-        <div style={styles.page}>
+        <div ref={pageRef} style={styles.page}>
             <div style={styles.header}>
                 <div style={styles.title}>Reminders</div>
                 <Buttons.main title={showAdd ? "Cancel" : "+ Add"} onClick={() => setShowAdd((v) => !v)} style={styles.addButton} />

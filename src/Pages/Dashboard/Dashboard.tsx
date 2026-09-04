@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { RemindersResult, ItemStatus, WeatherData } from "@/Types";
 import { STATUS_COLORS } from "@/Types";
 import { styles } from "./styles";
+import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 import { Reminders } from "@/Helpers/Reminders/Reminders";
 import { Weather } from "@/Helpers/Weather/Weather";
 
@@ -35,6 +36,7 @@ const StatusBadge = ({ status }: { status: ItemStatus }) => (
 );
 
 export const DashboardPage = () => {
+    const pageRef = useDragScroll();
     const [time, setTime] = useState(formatTime());
     const [data, setData] = useState<RemindersResult | null>(null);
     const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -89,7 +91,7 @@ export const DashboardPage = () => {
     // const weather = data?.weather ?? null;
 
     return (
-        <div style={styles.page}>
+        <div ref={pageRef} style={styles.page}>
             <div style={styles.header}>
                 <div>
                     <div style={styles.time}>{time}</div>

@@ -4,6 +4,7 @@ import { Buttons } from "@/Components/Button/Button";
 import type { Reminder } from "@/Types";
 import { STATUS_COLORS } from "@/Types";
 import { styles } from "./styles";
+import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_NAMES = [
@@ -75,6 +76,7 @@ const DayModal = ({
 );
 
 export const CalendarPage = () => {
+    const pageRef = useDragScroll();
     const today = new Date();
     const [viewYear, setViewYear] = useState(today.getFullYear());
     const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -136,7 +138,7 @@ export const CalendarPage = () => {
     const selectedReminders = selectedDate ? (byDate[selectedDate] ?? []) : [];
 
     return (
-        <div style={styles.page}>
+        <div ref={pageRef} style={styles.page}>
             <div style={styles.title}>Calendar</div>
 
             {error && <span style={styles.errorText}>Could not load reminders.</span>}
