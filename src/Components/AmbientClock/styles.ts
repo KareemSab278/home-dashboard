@@ -12,8 +12,8 @@ export const styles: Record<string, CSSProperties> = {
         cursor: "pointer",
     },
     clock: {
-        fontSize: "clamp(96px, 20vw, 200px)",
-        fontWeight: 100,
+        fontSize: "clamp(120px, 24vw, 260px)",
+        fontWeight: 400,
         color: "#fff",
         letterSpacing: "0.05em",
         fontVariantNumeric: "tabular-nums",

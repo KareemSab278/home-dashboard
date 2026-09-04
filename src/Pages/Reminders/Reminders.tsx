@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Reminders } from "@/Helpers/Reminders/Reminders";
 import { Buttons } from "@/Components/Button/Button";
+import { VirtualKeyboard } from "@/Components/VirtualKeyboard/VirtualKeyboard";
 import type { Reminder } from "@/Types";
 import { STATUS_COLORS } from "@/Types";
 import { styles } from "./styles";
@@ -9,6 +10,8 @@ import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 const today = () => new Date().toISOString().slice(0, 10);
 
 type EditDraft = { title: string; due_date: string; due_time: string };
+
+type FocusedField = 'title' | 'due_date' | 'due_time' | null;
 
 const ReminderRow = ({
     reminder,
@@ -29,44 +32,60 @@ const ReminderRow = ({
         due_date: reminder.due_date,
         due_time: reminder.due_time ?? "",
     });
+    const [kbField, setKbField] = useState<FocusedField>(null);
 
     const handleSave = () => {
         onSaveEdit(reminder.id, draft);
         setEditing(false);
+        setKbField(null);
+    };
+
+    const updateField = (field: Exclude<FocusedField, null>, value: string) => {
+        setDraft((d) => ({ ...d, [field]: value }));
     };
 
     if (editing) {
         return (
-            <div style={styles.addForm}>
-                <input
-                    style={styles.input}
-                    value={draft.title}
-                    onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
-                    placeholder="Title"
-                />
-                <div style={{ display: "flex", gap: 8 }}>
+            <>
+                <div style={styles.addForm}>
                     <input
-                        style={{ ...styles.input, flex: 1 }}
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="YYYY-MM-DD"
-                        value={draft.due_date}
-                        onChange={(e) => setDraft((d) => ({ ...d, due_date: e.target.value }))}
+                        style={styles.input}
+                        value={draft.title}
+                        onFocus={() => setKbField('title')}
+                        placeholder="Title"
+                        readOnly
                     />
-                    <input
-                        style={{ ...styles.input, flex: 1 }}
-                        type="text"
-                        inputMode="numeric"
-                        placeholder="HH:MM"
-                        value={draft.due_time}
-                        onChange={(e) => setDraft((d) => ({ ...d, due_time: e.target.value }))}
+                    <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                            style={{ ...styles.input, flex: 1 }}
+                            type="text"
+                            placeholder="YYYY-MM-DD"
+                            value={draft.due_date}
+                            onFocus={() => setKbField('due_date')}
+                            readOnly
+                        />
+                        <input
+                            style={{ ...styles.input, flex: 1 }}
+                            type="text"
+                            placeholder="HH:MM"
+                            value={draft.due_time}
+                            onFocus={() => setKbField('due_time')}
+                            readOnly
+                        />
+                    </div>
+                    <div style={styles.formButtons}>
+                        <Buttons.main title="Save" onClick={handleSave} style={styles.saveButton} />
+                        <Buttons.main title="Cancel" onClick={() => { setEditing(false); setKbField(null); }} style={styles.cancelButton} />
+                    </div>
+                </div>
+                {kbField && (
+                    <VirtualKeyboard
+                        value={draft[kbField]}
+                        onChange={(v) => updateField(kbField, v)}
+                        onClose={() => setKbField(null)}
                     />
-                </div>
-                <div style={styles.formButtons}>
-                    <Buttons.main title="Save" onClick={handleSave} style={styles.saveButton} />
-                    <Buttons.main title="Cancel" onClick={() => setEditing(false)} style={styles.cancelButton} />
-                </div>
-            </div>
+                )}
+            </>
         );
     }
 
@@ -100,6 +119,7 @@ export const RemindersPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [showAdd, setShowAdd] = useState(false);
     const [newDraft, setNewDraft] = useState<EditDraft>({ title: "", due_date: today(), due_time: "" });
+    const [kbField, setKbField] = useState<FocusedField>(null);
 
     const load = async () => {
         try {
@@ -150,7 +170,12 @@ export const RemindersPage = () => {
             setReminders(result.reminders ?? []);
             setNewDraft({ title: "", due_date: today(), due_time: "" });
             setShowAdd(false);
+            setKbField(null);
         } catch { setError("create_failed"); }
+    };
+
+    const updateNewField = (field: Exclude<FocusedField, null>, value: string) => {
+        setNewDraft((d) => ({ ...d, [field]: value }));
     };
 
     const active = reminders.filter((r) => r.status !== "completed" && r.status !== "dismissed");
@@ -166,44 +191,54 @@ export const RemindersPage = () => {
             {error && <span style={styles.errorText}>Error: {error}</span>}
 
             {showAdd && (
-                <div style={styles.addForm}>
-                    <input
-                        style={styles.input}
-                        placeholder="Reminder title…"
-                        value={newDraft.title}
-                        onChange={(e) => setNewDraft((d) => ({ ...d, title: e.target.value }))}
-                        autoFocus
-                    />
-                    <div style={{ display: "flex", gap: 8 }}>
+                <>
+                    <div style={styles.addForm}>
                         <input
-                            style={{ ...styles.input, flex: 1 }}
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="YYYY-MM-DD"
-                            value={newDraft.due_date}
-                            onChange={(e) => setNewDraft((d) => ({ ...d, due_date: e.target.value }))}
+                            style={styles.input}
+                            placeholder="Reminder title…"
+                            value={newDraft.title}
+                            onFocus={() => setKbField('title')}
+                            readOnly
                         />
-                        <input
-                            style={{ ...styles.input, flex: 1 }}
-                            type="text"
-                            inputMode="numeric"
-                            placeholder="HH:MM"
-                            value={newDraft.due_time}
-                            onChange={(e) => setNewDraft((d) => ({ ...d, due_time: e.target.value }))}
-                        />
+                        <div style={{ display: "flex", gap: 8 }}>
+                            <input
+                                style={{ ...styles.input, flex: 1 }}
+                                type="text"
+                                placeholder="YYYY-MM-DD"
+                                value={newDraft.due_date}
+                                onFocus={() => setKbField('due_date')}
+                                readOnly
+                            />
+                            <input
+                                style={{ ...styles.input, flex: 1 }}
+                                type="text"
+                                placeholder="HH:MM"
+                                value={newDraft.due_time}
+                                onFocus={() => setKbField('due_time')}
+                                readOnly
+                            />
+                        </div>
+                        <div style={styles.formButtons}>
+                            <Buttons.main title="Save" onClick={handleCreate} style={styles.saveButton} />
+                            <Buttons.main
+                                title="Cancel"
+                                onClick={() => {
+                                    setShowAdd(false);
+                                    setNewDraft({ title: "", due_date: today(), due_time: "" });
+                                    setKbField(null);
+                                }}
+                                style={styles.cancelButton}
+                            />
+                        </div>
                     </div>
-                    <div style={styles.formButtons}>
-                        <Buttons.main title="Save" onClick={handleCreate} style={styles.saveButton} />
-                        <Buttons.main
-                            title="Cancel"
-                            onClick={() => {
-                                setShowAdd(false);
-                                setNewDraft({ title: "", due_date: today(), due_time: "" });
-                            }}
-                            style={styles.cancelButton}
+                    {kbField && (
+                        <VirtualKeyboard
+                            value={newDraft[kbField]}
+                            onChange={(v) => updateNewField(kbField, v)}
+                            onClose={() => setKbField(null)}
                         />
-                    </div>
-                </div>
+                    )}
+                </>
             )}
 
             {active.length === 0 && !showAdd && (
