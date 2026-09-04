@@ -1,28 +1,38 @@
 import { useEffect, useRef } from "react";
 
+// Pointer-driven scroll fallback for WebKitGTK (Raspberry Pi), which often ignores native touch scroll on overflow:auto.
 export const useDragScroll = () => {
-    const TOUCH_CODE_REQUIRED: boolean = import.meta.env.VITE_TOUCH_CODE_REQUIRED === 'true';
-
     const ref = useRef<HTMLDivElement>(null);
+
     useEffect(() => {
-        if (!TOUCH_CODE_REQUIRED) return;
         const el = ref.current;
         if (!el) return;
-        let startY = 0, startScrollTop = 0, active = false, moved = false;
+        let startY = 0, startScrollTop = 0, active = false, moved = false, pointerId = -1;
 
-        const onDown = (e: PointerEvent) => { active = true; moved = false; startY = e.clientY; startScrollTop = el.scrollTop; };
-        const onMove = (e: PointerEvent) => {
-            if (!active) return;
-            const dy = Math.round(startY - e.clientY);
-            if (!moved && Math.abs(dy) < 0.2) return;
-            moved = true;
-            el.scrollTop = startScrollTop + Math.round(dy * 7);
+        const onDown = (e: PointerEvent) => {
+            active = true;
+            moved = false;
+            pointerId = e.pointerId;
+            startY = e.clientY;
+            startScrollTop = el.scrollTop;
         };
-        const onUp = () => { active = false; };
+        const onMove = (e: PointerEvent) => {
+            if (!active || e.pointerId !== pointerId) return;
+            const dy = startY - e.clientY;
+            if (!moved && Math.abs(dy) < 4) return;
+            if (!moved) el.setPointerCapture(pointerId);
+            moved = true;
+            el.scrollTop = startScrollTop + dy;
+            e.preventDefault();
+        };
+        const onUp = (e: PointerEvent) => {
+            active = false;
+            if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+        };
         const onClick = (e: MouseEvent) => { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } };
 
         el.addEventListener('pointerdown', onDown);
-        el.addEventListener('pointermove', onMove);
+        el.addEventListener('pointermove', onMove, { passive: false });
         el.addEventListener('pointerup', onUp);
         el.addEventListener('pointercancel', onUp);
         el.addEventListener('click', onClick, true);
@@ -33,6 +43,6 @@ export const useDragScroll = () => {
             el.removeEventListener('pointercancel', onUp);
             el.removeEventListener('click', onClick, true);
         };
-    }, [TOUCH_CODE_REQUIRED]);
+    }, []);
     return ref;
 }
