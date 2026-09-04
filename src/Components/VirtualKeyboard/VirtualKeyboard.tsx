@@ -112,7 +112,7 @@ const styles: Record<string, CSSProperties> = {
     },
     key: {
         minWidth: 56,
-        height: 60,
+        height: 70,
         padding: '0 6px',
         fontSize: 24,
         fontWeight: 500,

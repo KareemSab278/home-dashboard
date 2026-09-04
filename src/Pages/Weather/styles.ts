@@ -7,116 +7,136 @@ export const styles: Record<string, CSSProperties> = {
         minHeight: 0,
         background: "#0a0a0a",
         color: "#fff",
-        padding: "24px 20px 16px",
+        padding: "36px 30px 24px",
         display: "flex",
         flexDirection: "column",
-        gap: 20,
+        gap: 30,
         WebkitUserSelect: "none",
         userSelect: "none",
     },
+
     title: {
-        fontSize: 22,
+        fontSize: 34,
         fontWeight: 600,
         letterSpacing: "0.04em",
         color: "#fff",
     },
+
     currentCard: {
-        padding: "16px",
+        padding: "24px",
         border: "1px solid #1e1e1e",
-        borderRadius: 10,
+        borderRadius: 14,
         display: "flex",
         alignItems: "flex-start",
-        gap: 20,
+        gap: 28,
     },
+
     tempBlock: {
         display: "flex",
         flexDirection: "column",
     },
+
     tempLarge: {
-        fontSize: 52,
+        fontSize: 76,
         fontWeight: 700,
         color: "#fff",
         lineHeight: 1,
     },
+
     feelsLike: {
-        fontSize: 17,
+        fontSize: 21,
         color: "#555",
-        marginTop: 4,
+        marginTop: 7,
     },
+
     detailBlock: {
         flex: 1,
         display: "flex",
         flexDirection: "column",
-        gap: 4,
+        gap: 7,
     },
+
     description: {
-        fontSize: 30,
+        fontSize: 36,
         fontWeight: 600,
         color: "#ccc",
     },
+
     metaRow: {
-        fontSize: 18,
+        fontSize: 22,
         color: "#aeadad",
     },
+
     sectionLabel: {
-        fontSize: 11,
+        fontSize: 16,
         fontWeight: 700,
         letterSpacing: "0.12em",
         textTransform: "uppercase",
         color: "#444",
-        marginBottom: 8,
+        marginBottom: 10,
     },
+
     forecastGrid: {
         display: "grid",
         gridTemplateColumns: "repeat(5, 1fr)",
-        gap: 6,
+        gap: 10,
     },
+
     forecastCell: {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "10px 4px",
+        padding: "16px 8px",
         border: "1px solid #1a1a1a",
-        borderRadius: 8,
-        gap: 4,
+        borderRadius: 12,
+        gap: 7,
+        minHeight: 130,
     },
+
     forecastDay: {
-        fontSize: 11,
+        fontSize: 15,
         fontWeight: 700,
         letterSpacing: "0.06em",
         color: "#555",
         textTransform: "uppercase",
     },
+
     forecastHigh: {
-        fontSize: 20,
+        fontSize: 27,
         fontWeight: 500,
         color: "#fff",
     },
+
     forecastLow: {
-        fontSize: 18,
+        fontSize: 23,
         color: "#838383",
     },
+
     forecastIcon: {
-        width: 40,
-        height: 40,
+        width: 56,
+        height: 56,
         objectFit: "contain",
     },
+
     currentIcon: {
-        width: 48,
-        height: 48,
+        width: 68,
+        height: 68,
         objectFit: "contain",
     },
+
     forecastRain: {
-        fontSize: 11,
+        fontSize: 15,
         color: "#3b82f6",
     },
+
     errorText: {
-        fontSize: 13,
+        fontSize: 19,
         color: "#ef4444",
     },
+
     emptyText: {
-        fontSize: 13,
-        color: "#333",
+        fontSize: 19,
+        color: "#444",
         fontStyle: "italic",
     },
 };
