@@ -68,3 +68,8 @@ export const STATUS_COLORS: Record<ItemStatus, string> = {
     completed: "#555",
     dismissed: "#555",
 };
+
+
+export type CameraResult = {
+    path: string;
+};

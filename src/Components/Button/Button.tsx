@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 export const Buttons = {
     main: ({ title, onClick, style }: { title: string; onClick: () => void; style?: React.CSSProperties }) => baseBtn({ title, onClick, style }),
     nav: ({ title, onClick, onNavigateTo, style }: { title: string; onClick: () => void; onNavigateTo: string; style?: React.CSSProperties }) => baseBtn({ title, onClick, onNavigateTo, style }),
+    cam: ({ title, onClick, style }: { title: string; onClick: () => void; style?: React.CSSProperties }) => baseBtn({ title, onClick, style }),
 }
 
 

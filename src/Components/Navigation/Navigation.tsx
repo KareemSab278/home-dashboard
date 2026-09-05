@@ -6,6 +6,7 @@ const NAV_ITEMS = [
     { label: "Calendar", path: "/calendar" },
     { label: "Weather", path: "/weather" },
     { label: "Reminders", path: "/reminders" },
+    { label: "Camera", path: "/camera" },
 ] as const;
 
 export const Navigation = () => {
@@ -18,7 +19,7 @@ export const Navigation = () => {
                     title={label}
                     onClick={() => {}}
                     onNavigateTo={path}
-                /> 
+                />
             ))}
         </nav>
     );

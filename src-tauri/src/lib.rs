@@ -1,5 +1,6 @@
 mod dashboard;
 mod weather;
+mod camera;
 mod reminders;
 mod system;
 mod db;
@@ -29,6 +30,7 @@ pub fn run() {
             reminders::dismiss_reminder,
             reminders::delete_reminder,
             system::get_system_info,
+            camera::save_photo,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application")

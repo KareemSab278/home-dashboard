@@ -5,3 +5,4 @@ pub mod system;
 pub mod weather;
 pub mod db;
 pub mod types;
+pub mod camera;
