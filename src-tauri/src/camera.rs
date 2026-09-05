@@ -8,8 +8,9 @@ use std::thread;
 
 use tauri::{AppHandle, Manager};
 
-const CAMERA_DEVICE: &str =
-    "/dev/v4l/by-id/usb-Generic_USB_Camera_200901010001-video-index0";
+// const CAMERA_DEVICE: &str =
+//     "/dev/v4l/by-id/usb-Generic_USB_Camera_200901010001-video-index0";
+const CAMERA_DEVICE: &str = "/dev/video0";
 
 // ffmpeg listens internally on this address; it is never exposed to the WebView directly
 // because its responses carry no CORS headers, which would leave the canvas tainted.
