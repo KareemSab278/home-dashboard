@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { invoke } from "@tauri-apps/api/core";
 import { Camera } from "../../Helpers/Camera/Camera";
 import { CameraResult } from "@/Types";
 import { Buttons } from "../Button/Button";
 
+// A local proxy in Rust forwards the ffmpeg MJPEG stream here and adds a CORS
+// header so this frame can be drawn onto a canvas (see src-tauri/src/camera.rs).
+const CAMERA_STREAM_URL = "http://127.0.0.1:8008";
+
 export const CameraFeed = () => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const streamRef = useRef<MediaStream | null>(null);
+    const imageRef = useRef<HTMLImageElement>(null);
 
     const location = useLocation();
 
@@ -28,74 +32,63 @@ export const CameraFeed = () => {
     useEffect(() => {
         let active = true;
 
-        const stopCamera = () => {
-            streamRef.current?.getTracks().forEach((track) => {
-                track.stop();
-            });
-
-            streamRef.current = null;
-
-            if (videoRef.current) {
-                videoRef.current.srcObject = null;
-            }
-        };
-
-        if (location.pathname !== "/camera") {
-            stopCamera();
-            return;
-        }
-
         const startCamera = async () => {
             try {
-                const stream =
-                    await navigator.mediaDevices.getUserMedia({
-                        video: true,
-                        audio: false,
-                    });
+                setError(null);
 
-                if (!active || location.pathname !== "/camera") {
-                    stream.getTracks().forEach((track) => track.stop());
+                await invoke("start_camera_stream");
+
+                if (!active) {
                     return;
-                }
-
-                streamRef.current = stream;
-
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
                 }
             } catch (err) {
                 if (!active) return;
 
-                console.error("Failed to access camera:", err);
-                setError("Could not access camera");
+                console.error("Failed to start camera stream:", err);
+                setError("Could not start camera");
             }
         };
 
-        startCamera();
+        const stopCamera = async () => {
+            try {
+                await invoke("stop_camera_stream");
+            } catch (err) {
+                console.error("Failed to stop camera stream:", err);
+            }
+        };
+
+        if (location.pathname === "/camera") {
+            startCamera();
+        } else {
+            stopCamera();
+        }
 
         return () => {
             active = false;
-            stopCamera();
+
+            if (location.pathname === "/camera") {
+                stopCamera();
+            }
         };
     }, [location.pathname]);
 
     const takePhoto = async () => {
-        const video = videoRef.current;
+        const image = imageRef.current;
 
-        if (!video) {
+        if (!image) {
             setError("Camera is not ready");
             return;
         }
 
-        if (!video.videoWidth || !video.videoHeight) {
+        if (!image.naturalWidth || !image.naturalHeight) {
             setError("Camera frame is not ready");
             return;
         }
 
         const canvas = document.createElement("canvas");
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
 
         const context = canvas.getContext("2d");
 
@@ -105,7 +98,7 @@ export const CameraFeed = () => {
         }
 
         context.drawImage(
-            video,
+            image,
             0,
             0,
             canvas.width,
@@ -144,12 +137,11 @@ export const CameraFeed = () => {
     return (
         <div style={styles.container}>
             <div style={styles.cameraContainer}>
-                <video
-                    ref={videoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    controls={false}
+                <img
+                    ref={imageRef}
+                    src={CAMERA_STREAM_URL}
+                    alt="Camera"
+                    crossOrigin="anonymous"
                     style={styles.video}
                 />
 

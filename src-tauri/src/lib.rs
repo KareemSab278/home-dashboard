@@ -7,6 +7,8 @@ mod db;
 mod server;
 mod types;
 
+use tauri::Manager;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // am i allowed to put this here? 
@@ -15,6 +17,10 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .manage(camera::CameraState {
+            process: std::sync::Mutex::new(None),
+            proxy_started: std::sync::Mutex::new(false),
+        })
         .invoke_handler(tauri::generate_handler![
             dashboard::get_dashboard,
             dashboard::get_today_overview,
@@ -31,7 +37,16 @@ pub fn run() {
             reminders::delete_reminder,
             system::get_system_info,
             camera::save_photo,
+            camera::start_camera_stream,
+            camera::stop_camera_stream,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application")
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // Make sure FFmpeg doesn't keep running as an orphaned process after exit.
+            if let tauri::RunEvent::Exit = event {
+                let state: tauri::State<camera::CameraState> = app_handle.state();
+                let _ = camera::stop_camera_process(&state);
+            }
+        });
 }
