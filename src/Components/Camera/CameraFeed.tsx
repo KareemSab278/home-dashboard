@@ -57,18 +57,20 @@ export const CameraFeed = () => {
             }
         };
 
-        if (location.pathname === "/camera") {
-            startCamera();
-        } else {
-            stopCamera();
-        }
+        // if (location.pathname === "/camera") {
+        //     startCamera();
+        // } else {
+        //     stopCamera();
+        // }
+
+        startCamera();
 
         return () => {
             active = false;
 
-            if (location.pathname === "/camera") {
-                stopCamera();
-            }
+            // if (location.pathname === "/camera") {
+            //     stopCamera();
+            // }
         };
     }, [location.pathname]);
 
