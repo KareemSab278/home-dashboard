@@ -7,7 +7,7 @@ import { Buttons } from "../Button/Button";
 
 // A local proxy in Rust forwards the ffmpeg MJPEG stream here and adds a CORS
 // header so this frame can be drawn onto a canvas (see src-tauri/src/camera.rs).
-const CAMERA_STREAM_URL = "http://127.0.0.1:8008/stream";
+const CAMERA_STREAM_URL = "http://127.0.0.1:8008";
 
 export const CameraFeed = () => {
     const imageRef = useRef<HTMLImageElement>(null);
