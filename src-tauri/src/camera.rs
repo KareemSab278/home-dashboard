@@ -2,34 +2,25 @@ use std::fs;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::PathBuf;
-use std::process::{Child, Command};
-use std::sync::Mutex;
+use std::process::{Child, ChildStdout, Command, Stdio};
+use std::sync::{Arc, Mutex};
 use std::thread;
 
 use tauri::{AppHandle, Manager};
 
-// const CAMERA_DEVICE: &str =
-//     "/dev/v4l/by-id/usb-Generic_USB_Camera_200901010001-video-index0";
 const CAMERA_DEVICE: &str = "/dev/video0";
-
-// ffmpeg listens internally on this address; it is never exposed to the WebView directly
-// because its responses carry no CORS headers, which would leave the canvas tainted.
-const FFMPEG_ADDR: &str = "127.0.0.1:8090";
-
-// The WebView loads the stream from this address instead. A small local proxy forwards
-// bytes from FFMPEG_ADDR and injects Access-Control-Allow-Origin so the <img> frame can
-// be drawn onto a canvas (needed for photo capture) without tainting it.
 const PROXY_ADDR: &str = "127.0.0.1:8008";
 
 pub struct CameraState {
     pub process: Mutex<Option<Child>>,
     pub proxy_started: Mutex<bool>,
+    pub stream: Arc<Mutex<Option<Arc<Mutex<ChildStdout>>>>>,
 }
 
 #[tauri::command]
 pub fn save_photo(app: AppHandle, data: Vec<u8>) -> Result<String, String> {
     println!("Saving photo with {} bytes", data.len());
-    println!("Starting to save photo...");
+
     let picture_dir = app
         .path()
         .picture_dir()
@@ -39,7 +30,6 @@ pub fn save_photo(app: AppHandle, data: Vec<u8>) -> Result<String, String> {
 
     fs::create_dir_all(&camera_dir)
         .map_err(|e| format!("Could not create photo directory: {}", e))?;
-    println!("Photo directory created at {:?}", camera_dir);
 
     let timestamp = chrono::Local::now()
         .format("%Y-%m-%d_%H-%M-%S-%3f")
@@ -48,6 +38,7 @@ pub fn save_photo(app: AppHandle, data: Vec<u8>) -> Result<String, String> {
     let file_path: PathBuf = camera_dir.join(format!("photo_{}.jpg", timestamp));
 
     fs::write(&file_path, data).map_err(|e| format!("Could not save photo: {}", e))?;
+
     println!("Photo saved at {:?}", file_path);
 
     Ok(file_path.to_string_lossy().to_string())
@@ -62,7 +53,7 @@ pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<Strin
         .lock()
         .map_err(|_| "Could not lock camera state".to_string())?;
 
-    // If FFmpeg is already running, don't start another instance.
+    // Already running?
     if let Some(child) = process.as_mut() {
         match child.try_wait() {
             Ok(None) => {
@@ -71,9 +62,20 @@ pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<Strin
                     PROXY_ADDR
                 ));
             }
-            Ok(Some(_)) => {
+
+            Ok(Some(status)) => {
+                println!("Previous FFmpeg process exited with {:?}", status);
+
                 *process = None;
+
+                let mut stream = state
+                    .stream
+                    .lock()
+                    .map_err(|_| "Could not lock camera stream state".to_string())?;
+
+                *stream = None;
             }
+
             Err(e) => {
                 return Err(format!("Could not check camera process: {}", e));
             }
@@ -84,7 +86,9 @@ pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<Strin
         return Err(format!("Camera not found at {}", CAMERA_DEVICE));
     }
 
-    let child = Command::new("ffmpeg")
+    println!("Starting FFmpeg...");
+
+    let mut child = Command::new("ffmpeg")
         .args([
             "-f",
             "v4l2",
@@ -96,18 +100,35 @@ pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<Strin
             "640x480",
             "-i",
             CAMERA_DEVICE,
-            // Camera already outputs MJPEG. Do not decode/re-encode it.
+            // Camera already provides MJPEG.
             "-c:v",
             "copy",
-            // HTTP multipart MJPEG stream.
+            // Multipart MJPEG output.
             "-f",
             "mpjpeg",
-            "-listen",
-            "1",
-            &format!("http://{}", FFMPEG_ADDR),
+            // Send MJPEG to stdout instead of HTTP.
+            "pipe:1",
         ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
         .spawn()
         .map_err(|e| format!("Could not start FFmpeg: {}", e))?;
+
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| "Could not capture FFmpeg stdout".to_string())?;
+
+    let stream = Arc::new(Mutex::new(stdout));
+
+    {
+        let mut stream_state = state
+            .stream
+            .lock()
+            .map_err(|_| "Could not lock camera stream state".to_string())?;
+
+        *stream_state = Some(stream);
+    }
 
     *process = Some(child);
 
@@ -128,10 +149,20 @@ pub fn stop_camera_process(state: &CameraState) -> Result<(), String> {
         .map_err(|_| "Could not lock camera state".to_string())?;
 
     if let Some(mut child) = process.take() {
+        println!("Stopping FFmpeg...");
+
         let _ = child.kill();
         let _ = child.wait();
+
         println!("Camera stream stopped");
     }
+
+    let mut stream = state
+        .stream
+        .lock()
+        .map_err(|_| "Could not lock camera stream state".to_string())?;
+
+    *stream = None;
 
     Ok(())
 }
@@ -149,14 +180,21 @@ fn ensure_proxy_started(state: &CameraState) -> Result<(), String> {
     let listener = TcpListener::bind(PROXY_ADDR)
         .map_err(|e| format!("Could not bind camera proxy on {}: {}", PROXY_ADDR, e))?;
 
+    let stream_state = Arc::clone(&state.stream);
+
     thread::spawn(move || {
         println!("Camera proxy listening on {}", PROXY_ADDR);
 
         for incoming in listener.incoming() {
             match incoming {
                 Ok(client) => {
-                    thread::spawn(move || proxy_client(client));
+                    let stream_state = Arc::clone(&stream_state);
+
+                    thread::spawn(move || {
+                        proxy_client(client, stream_state);
+                    });
                 }
+
                 Err(e) => {
                     eprintln!("Camera proxy connection error: {}", e);
                 }
@@ -169,22 +207,29 @@ fn ensure_proxy_started(state: &CameraState) -> Result<(), String> {
     Ok(())
 }
 
-// Relays the MJPEG stream from ffmpeg to a single WebView client, injecting a
-// permissive CORS header so the frame can be captured onto a canvas.
-fn proxy_client(client: TcpStream) {
+fn proxy_client(client: TcpStream, stream_state: Arc<Mutex<Option<Arc<Mutex<ChildStdout>>>>>) {
     let mut client_reader = match client.try_clone() {
         Ok(clone) => BufReader::new(clone),
-        Err(_) => return,
+        Err(e) => {
+            eprintln!("Could not clone client socket: {}", e);
+            return;
+        }
     };
 
-    // Read and discard the client's HTTP request.
+    // Read HTTP request.
     let mut line = String::new();
 
     loop {
         line.clear();
 
         match client_reader.read_line(&mut line) {
-            Ok(0) | Err(_) => return,
+            Ok(0) => return,
+
+            Err(e) => {
+                eprintln!("Error reading camera request: {}", e);
+                return;
+            }
+
             Ok(_) => {
                 if line == "\r\n" || line == "\n" {
                     break;
@@ -193,96 +238,83 @@ fn proxy_client(client: TcpStream) {
         }
     }
 
-    // Give FFmpeg time to start listening.
-    let upstream = {
-        let mut stream = None;
+    let stream = {
+        let stream_guard = match stream_state.lock() {
+            Ok(guard) => guard,
 
-        for _ in 0..50 {
-            match TcpStream::connect(FFMPEG_ADDR) {
-                Ok(s) => {
-                    stream = Some(s);
-                    break;
-                }
-                Err(_) => {
-                    thread::sleep(std::time::Duration::from_millis(100));
-                }
+            Err(_) => {
+                send_503(client);
+                return;
             }
-        }
+        };
 
-        match stream {
-            Some(s) => s,
+        match stream_guard.as_ref() {
+            Some(stream) => Arc::clone(stream),
+
             None => {
-                let mut client_writer = client;
-
-                let _ = client_writer.write_all(
-                    b"HTTP/1.1 502 Bad Gateway\r\n\
-                      Content-Length: 0\r\n\
-                      Connection: close\r\n\
-                      \r\n",
-                );
-
+                send_503(client);
                 return;
             }
         }
     };
 
-    // Ask FFmpeg for its MJPEG stream.
-    let mut upstream_writer = match upstream.try_clone() {
-        Ok(clone) => clone,
-        Err(_) => return,
-    };
+    let mut client_writer = client;
 
-    if upstream_writer
-        .write_all(b"GET / HTTP/1.0\r\nHost: localhost\r\n\r\n")
-        .is_err()
-    {
+    // HTTP response.
+    let headers = b"HTTP/1.1 200 OK\r\n\
+          Content-Type: multipart/x-mixed-replace; boundary=ffmpeg\r\n\
+          Access-Control-Allow-Origin: *\r\n\
+          Cache-Control: no-cache, no-store, must-revalidate\r\n\
+          Pragma: no-cache\r\n\
+          Connection: close\r\n\
+          \r\n";
+
+    if client_writer.write_all(headers).is_err() {
         return;
     }
 
-    let mut upstream_reader = BufReader::new(upstream);
-    let mut client_writer = client;
+    println!("Camera client connected");
 
-    // Forward FFmpeg's response headers.
-    loop {
-        let mut header_line = String::new();
-
-        match upstream_reader.read_line(&mut header_line) {
-            Ok(0) | Err(_) => return,
-            Ok(_) => {}
-        }
-
-        if header_line == "\r\n" || header_line == "\n" {
-            // CORS header must be BEFORE the final blank line.
-            if client_writer
-                .write_all(b"Access-Control-Allow-Origin: *\r\n")
-                .is_err()
-            {
-                return;
-            }
-
-            if client_writer.write_all(b"\r\n").is_err() {
-                return;
-            }
-
-            break;
-        }
-
-        if client_writer.write_all(header_line.as_bytes()).is_err() {
-            return;
-        }
-    }
-
-    // Stream the MJPEG bytes.
     let mut buffer = [0u8; 8192];
 
     loop {
-        let bytes_read = match upstream_reader.read(&mut buffer) {
-            Ok(0) | Err(_) => return,
-            Ok(n) => n,
+        let bytes_read = {
+            let mut reader = match stream.lock() {
+                Ok(reader) => reader,
+
+                Err(_) => {
+                    eprintln!("FFmpeg stdout lock poisoned");
+                    return;
+                }
+            };
+
+            match reader.read(&mut buffer) {
+                Ok(0) => {
+                    println!("FFmpeg stdout closed");
+                    return;
+                }
+
+                Ok(n) => n,
+
+                Err(e) => {
+                    eprintln!("Error reading FFmpeg stdout: {}", e);
+                    return;
+                }
+            }
         };
 
         if client_writer.write_all(&buffer[..bytes_read]).is_err() {
+            println!("Camera client disconnected");
             return;
         }
     }
+}
+
+fn send_503(mut client: TcpStream) {
+    let _ = client.write_all(
+        b"HTTP/1.1 503 Service Unavailable\r\n\
+          Content-Length: 0\r\n\
+          Connection: close\r\n\
+          \r\n",
+    );
 }
