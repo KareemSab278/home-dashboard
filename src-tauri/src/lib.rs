@@ -20,6 +20,7 @@ pub fn run() {
         .manage(camera::CameraState {
             process: std::sync::Mutex::new(None),
             proxy_started: std::sync::Mutex::new(false),
+            stream: std::sync::Arc::new(std::sync::Mutex::new(None)),
         })
         .invoke_handler(tauri::generate_handler![
             dashboard::get_dashboard,
