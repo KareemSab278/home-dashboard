@@ -54,14 +54,23 @@ export const CameraFeed = () => {
     }, [location.pathname]);
 
     const takePhoto = async () => {
+        console.log("1. TAKE PHOTO CLICKED");
+
         const image = imageRef.current;
 
         if (!image) {
+            console.error("2. NO IMAGE");
             setError("Camera is not ready");
             return;
         }
 
+        console.log("2. IMAGE FOUND");
+        console.log("naturalWidth:", image.naturalWidth);
+        console.log("naturalHeight:", image.naturalHeight);
+        console.log("complete:", image.complete);
+
         if (!image.naturalWidth || !image.naturalHeight) {
+            console.error("3. IMAGE HAS NO DIMENSIONS");
             setError("Camera frame is not ready");
             return;
         }
@@ -71,36 +80,59 @@ export const CameraFeed = () => {
         canvas.width = image.naturalWidth;
         canvas.height = image.naturalHeight;
 
+        console.log("3. CANVAS CREATED");
+
         const context = canvas.getContext("2d");
 
         if (!context) {
+            console.error("4. NO CANVAS CONTEXT");
             setError("Could not create canvas");
             return;
         }
 
-        context.drawImage(
-            image,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+        console.log("4. CANVAS CONTEXT CREATED");
+
+        try {
+            context.drawImage(
+                image,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            console.log("5. IMAGE DRAWN TO CANVAS");
+        } catch (err) {
+            console.error("5. DRAW IMAGE FAILED:", err);
+            setError("Could not capture camera frame");
+            return;
+        }
 
         canvas.toBlob(
             async (blob) => {
+                console.log("6. TOBLOB CALLBACK");
+
                 if (!blob) {
+                    console.error("7. BLOB IS NULL");
                     setError("Failed to capture photo");
                     return;
                 }
+
+                console.log("7. BLOB CREATED:", blob.size, "bytes");
 
                 setPhoto(blob);
                 setSaving(true);
 
                 try {
+                    console.log("8. CALLING Camera.save()");
+
                     const photoPath: CameraResult = await Camera.save(blob);
+
+                    console.log("9. Camera.save() RETURNED:", photoPath);
+
                     setPhotoPath(photoPath);
                 } catch (err) {
-                    console.error("Failed to save photo:", err);
+                    console.error("10. Camera.save() FAILED:", err);
                     setError("Failed to save photo");
                 } finally {
                     setSaving(false);
@@ -120,10 +152,10 @@ export const CameraFeed = () => {
             <div style={styles.cameraContainer}>
                 <img
                     ref={imageRef}
+                    crossOrigin="anonymous"
                     src={CAMERA_STREAM_URL}
                     alt="Camera"
-                    // crossOrigin="anonymous"
-
+                    
                     onLoad={() => {
                         console.log("CAMERA LOADED");
                         console.log("width:", imageRef.current?.naturalWidth);
