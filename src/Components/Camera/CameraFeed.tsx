@@ -152,7 +152,6 @@ export const CameraFeed = () => {
             <div style={styles.cameraContainer}>
                 <img
                     ref={imageRef}
-                    crossOrigin="anonymous"
                     src={CAMERA_STREAM_URL}
                     alt="Camera"
                     
