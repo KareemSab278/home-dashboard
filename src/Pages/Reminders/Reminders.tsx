@@ -44,6 +44,7 @@ const ReminderRow = ({
         setDraft((d) => ({ ...d, [field]: value }));
     };
 
+
     if (editing) {
         return (
             <>
@@ -121,9 +122,14 @@ export const RemindersPage = () => {
     const [newDraft, setNewDraft] = useState<EditDraft>({ title: "", due_date: today(), due_time: "" });
     const [kbField, setKbField] = useState<FocusedField>(null);
 
+    const [serverAddress, setServerAddress] = useState<string>("");
+
+
     const load = async () => {
         try {
+            const addr = await Reminders.show_address();
             const result = await Reminders.get();
+            setServerAddress(addr);
             setReminders(result.reminders ?? []);
             setError(null);
         } catch {
@@ -185,6 +191,9 @@ export const RemindersPage = () => {
         <div ref={pageRef} style={styles.page}>
             <div style={styles.header}>
                 <div style={styles.title}>Reminders</div>
+                <div style={{ flex: 1 }}>
+                    {serverAddress && <span>{serverAddress}</span>}
+                </div>
                 <Buttons.main title={showAdd ? "Cancel" : "+ Add"} onClick={() => setShowAdd((v) => !v)} style={styles.addButton} />
             </div>
 

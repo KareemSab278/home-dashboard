@@ -1,7 +1,6 @@
 use crate::db;
 use crate::types::{CreateReminderInput, Reminder};
 use rusqlite::{params, Row};
-use serde::Deserialize;
 use serde_json::json;
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -236,4 +235,11 @@ pub fn start() {
             }
         }
     });
+}
+
+
+#[tauri::command]
+pub async fn show_address() -> Result<String, String> {
+    let local_ip = get_local_ip();
+    Ok(format!("http://{}:3000", local_ip))
 }

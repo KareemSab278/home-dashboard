@@ -25,4 +25,7 @@ export const Reminders = {
 
     delete: async (id: string): Promise<RemindersResult> =>
         await invoke("delete_reminder", { id }),
+    
+    show_address: async (): Promise<string> =>
+        await invoke("show_address"),
 };

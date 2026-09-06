@@ -40,6 +40,7 @@ pub fn run() {
             camera::save_photo,
             camera::start_camera_stream,
             camera::stop_camera_stream,
+            server::show_address,
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
