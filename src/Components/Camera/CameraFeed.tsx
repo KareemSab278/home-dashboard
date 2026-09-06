@@ -1,23 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Camera } from "../../Helpers/Camera/Camera";
 import { CameraResult } from "@/Types";
-import { Buttons } from "../Button/Button";
 
-// A local proxy in Rust forwards the ffmpeg MJPEG stream here and adds a CORS
-// header so this frame can be drawn onto a canvas (see src-tauri/src/camera.rs).
 const CAMERA_STREAM_URL = "http://127.0.0.1:8008";
 
 export const CameraFeed = () => {
     const imageRef = useRef<HTMLImageElement>(null);
-
     const location = useLocation();
-
     const [error, setError] = useState<string | null>(null);
-    const [photo, setPhoto] = useState<Blob | null>(null);
     const [photoPath, setPhotoPath] = useState<CameraResult | null>(null);
-    const [saving, setSaving] = useState(false);
+    // const [photo, setPhoto] = useState<Blob | null>(null);
+    // const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (photoPath) {
@@ -53,95 +47,72 @@ export const CameraFeed = () => {
 
     }, [location.pathname]);
 
-    const takePhoto = async () => {
-        console.log("1. TAKE PHOTO CLICKED");
+    // const takePhoto = async () => {
+    //     const image = imageRef.current;
 
-        const image = imageRef.current;
+    //     if (!image) {
+    //         console.error("2. NO IMAGE");
+    //         setError("Camera is not ready");
+    //         return;
+    //     }
 
-        if (!image) {
-            console.error("2. NO IMAGE");
-            setError("Camera is not ready");
-            return;
-        }
+    //     if (!image.naturalWidth || !image.naturalHeight) {
+    //         console.error("3. IMAGE HAS NO DIMENSIONS");
+    //         setError("Camera frame is not ready");
+    //         return;
+    //     }
 
-        console.log("2. IMAGE FOUND");
-        console.log("naturalWidth:", image.naturalWidth);
-        console.log("naturalHeight:", image.naturalHeight);
-        console.log("complete:", image.complete);
+    //     const canvas = document.createElement("canvas");
 
-        if (!image.naturalWidth || !image.naturalHeight) {
-            console.error("3. IMAGE HAS NO DIMENSIONS");
-            setError("Camera frame is not ready");
-            return;
-        }
+    //     canvas.width = image.naturalWidth;
+    //     canvas.height = image.naturalHeight;
 
-        const canvas = document.createElement("canvas");
+    //     const context = canvas.getContext("2d");
 
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
+    //     if (!context) {
+    //         console.error("4. NO CANVAS CONTEXT");
+    //         setError("Could not create canvas");
+    //         return;
+    //     }
 
-        console.log("3. CANVAS CREATED");
+    //     try {
+    //         context.drawImage(
+    //             image,
+    //             0,
+    //             0,
+    //             canvas.width,
+    //             canvas.height
+    //         );
 
-        const context = canvas.getContext("2d");
+    //     } catch (err) {
+    //         setError("Could not capture camera frame");
+    //         return;
+    //     }
 
-        if (!context) {
-            console.error("4. NO CANVAS CONTEXT");
-            setError("Could not create canvas");
-            return;
-        }
+    //     canvas.toBlob(
+    //         async (blob) => {
+    //             if (!blob) {
+    //                 setError("Failed to capture photo");
+    //                 return;
+    //             }
 
-        console.log("4. CANVAS CONTEXT CREATED");
+    //             setPhoto(blob);
+    //             setSaving(true);
 
-        try {
-            context.drawImage(
-                image,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+    //             try {
+    //                 const photoPath: CameraResult = await Camera.save(blob);
 
-            console.log("5. IMAGE DRAWN TO CANVAS");
-        } catch (err) {
-            console.error("5. DRAW IMAGE FAILED:", err);
-            setError("Could not capture camera frame");
-            return;
-        }
-
-        canvas.toBlob(
-            async (blob) => {
-                console.log("6. TOBLOB CALLBACK");
-
-                if (!blob) {
-                    console.error("7. BLOB IS NULL");
-                    setError("Failed to capture photo");
-                    return;
-                }
-
-                console.log("7. BLOB CREATED:", blob.size, "bytes");
-
-                setPhoto(blob);
-                setSaving(true);
-
-                try {
-                    console.log("8. CALLING Camera.save()");
-
-                    const photoPath: CameraResult = await Camera.save(blob);
-
-                    console.log("9. Camera.save() RETURNED:", photoPath);
-
-                    setPhotoPath(photoPath);
-                } catch (err) {
-                    console.error("10. Camera.save() FAILED:", err);
-                    setError("Failed to save photo");
-                } finally {
-                    setSaving(false);
-                }
-            },
-            "image/jpeg",
-            0.95
-        );
-    };
+    //                 setPhotoPath(photoPath);
+    //             } catch (err) {
+    //                 setError("Failed to save photo");
+    //             } finally {
+    //                 setSaving(false);
+    //             }
+    //         },
+    //         "image/jpeg",
+    //         0.95
+    //     );
+    // };
 
     if (error) {
         return <div>{error}</div>;
@@ -169,7 +140,7 @@ export const CameraFeed = () => {
                     style={styles.video}
                 />
 
-                <div style={styles.status}>
+                {/* <div style={styles.status}>
                     {saving && <div>Saving photo...</div>}
 
                     {photoPath && (<div> Photo saved </div>)}
@@ -178,7 +149,7 @@ export const CameraFeed = () => {
                     title=""
                     onClick={takePhoto}
                     style={styles.shutterButton}
-                />
+                /> */}
 
             </div>
 
@@ -194,13 +165,14 @@ const styles = {
         display: "flex",
         flexDirection: "column" as const,
         alignItems: "center",
+        justifyContent: "center",
     },
 
     cameraContainer: {
         position: "relative" as const,
-        flex: 1,
         width: "95%",
-        height: "90%",
+        maxHeight: "85%",
+        aspectRatio: "4 / 3",
     },
 
     video: {
