@@ -191,10 +191,10 @@ export const RemindersPage = () => {
         <div ref={pageRef} style={styles.page}>
             <div style={styles.header}>
                 <div style={styles.title}>Reminders</div>
-                <div style={{ flex: 1 }}>
-                    {serverAddress && <span>{serverAddress}</span>}
-                </div>
                 <Buttons.main title={showAdd ? "Cancel" : "+ Add"} onClick={() => setShowAdd((v) => !v)} style={styles.addButton} />
+            </div>
+            <div>
+                {serverAddress && <span>{serverAddress}</span>}
             </div>
 
             {error && <span style={styles.errorText}>Error: {error}</span>}
