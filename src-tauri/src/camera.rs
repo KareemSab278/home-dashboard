@@ -100,17 +100,14 @@ pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<Strin
             "640x480",
             "-i",
             CAMERA_DEVICE,
-            // Camera already provides MJPEG.
             "-c:v",
             "copy",
-            // Multipart MJPEG output.
             "-f",
             "mpjpeg",
-            // Send MJPEG to stdout instead of HTTP.
             "pipe:1",
         ])
         .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
+        .stderr(Stdio::null())
         .spawn()
         .map_err(|e| format!("Could not start FFmpeg: {}", e))?;
 
