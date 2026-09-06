@@ -115,7 +115,7 @@ export const CameraFeed = () => {
     // };
 
     if (error) {
-        return <div>{error}</div>;
+        return <div style={styles.container}>{error}</div>;
     }
 
     return (
@@ -160,8 +160,9 @@ export const CameraFeed = () => {
 
 const styles = {
     container: {
-        width: "100%",
-        height: "100%",
+        flex: 1,
+        overflow: "auto",
+        minHeight: 0,
         display: "flex",
         flexDirection: "column" as const,
         alignItems: "center",
