@@ -37,6 +37,7 @@ pub fn run() {
             reminders::dismiss_reminder,
             reminders::delete_reminder,
             system::get_system_info,
+            system::kill,
             camera::save_photo,
             camera::start_camera_stream,
             camera::stop_camera_stream,

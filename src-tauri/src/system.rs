@@ -5,3 +5,9 @@ pub fn get_system_info() -> Result<serde_json::Value, String> {
         "arch": std::env::consts::ARCH,
     }))
 }
+
+
+#[tauri::command]
+pub fn kill() {
+    std::process::exit(0);
+}

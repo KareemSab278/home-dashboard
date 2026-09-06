@@ -5,6 +5,7 @@ import { styles } from "./styles";
 import { useDragScroll } from "@/Components/DragScroll/useDragScroll";
 import { Reminders } from "@/Helpers/Reminders/Reminders";
 import { Weather } from "@/Helpers/Weather/Weather";
+import { KillApp } from "@/Helpers/Environment/environment"; 
 
 const REFRESH_INTERVAL_MS = 60_000;
 
@@ -166,6 +167,8 @@ export const DashboardPage = () => {
                     ))}
                 </div>
             )}
+            <KillApp />
+
         </div>
     );
 };

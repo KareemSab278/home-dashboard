@@ -77,7 +77,7 @@ export const WeatherPage = () => {
 
             {forecast.length > 0 && (
                 <>
-                    <div style={styles.sectionLabel}>10-Day Forecast</div>
+                    <div style={styles.sectionLabel}>3 Day Forecast</div>
                     <div style={styles.forecastGrid}>
                         {forecast.map((day, i) => {
                             const iconUrl = day.icon

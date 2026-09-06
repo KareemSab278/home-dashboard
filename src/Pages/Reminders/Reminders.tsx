@@ -193,7 +193,7 @@ export const RemindersPage = () => {
                 <div style={styles.title}>Reminders</div>
                 <Buttons.main title={showAdd ? "Cancel" : "+ Add"} onClick={() => setShowAdd((v) => !v)} style={styles.addButton} />
             </div>
-            <div>
+            <div style={styles.serverAddress}>
                 {serverAddress && <span>{serverAddress}</span>}
             </div>
 

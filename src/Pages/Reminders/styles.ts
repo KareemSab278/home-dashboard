@@ -20,9 +20,14 @@ export const styles: Record<string, CSSProperties> = {
         justifyContent: "space-between",
         alignItems: "center",
     },
+    
+    serverAddress: {
+        fontSize: 14,
+        color: "#888",
+    },
 
     title: {
-        fontSize: 34,
+        fontSize: 44,
         fontWeight: 300,
         letterSpacing: "0.04em",
         color: "#fff",
