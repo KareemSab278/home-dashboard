@@ -7,7 +7,7 @@ import { Buttons } from "../Button/Button";
 
 // A local proxy in Rust forwards the ffmpeg MJPEG stream here and adds a CORS
 // header so this frame can be drawn onto a canvas (see src-tauri/src/camera.rs).
-const CAMERA_STREAM_URL = "http://127.0.0.1:8008";
+const CAMERA_STREAM_URL = "http://127.0.0.1:8008/stream";
 
 export const CameraFeed = () => {
     const imageRef = useRef<HTMLImageElement>(null);
@@ -49,29 +49,8 @@ export const CameraFeed = () => {
             }
         };
 
-        const stopCamera = async () => {
-            try {
-                await invoke("stop_camera_stream");
-            } catch (err) {
-                console.error("Failed to stop camera stream:", err);
-            }
-        };
-
-        // if (location.pathname === "/camera") {
-        //     startCamera();
-        // } else {
-        //     stopCamera();
-        // }
-
         startCamera();
 
-        return () => {
-            active = false;
-
-            // if (location.pathname === "/camera") {
-            //     stopCamera();
-            // }
-        };
     }, [location.pathname]);
 
     const takePhoto = async () => {
@@ -143,14 +122,26 @@ export const CameraFeed = () => {
                     ref={imageRef}
                     src={CAMERA_STREAM_URL}
                     alt="Camera"
-                    crossOrigin="anonymous"
+                    // crossOrigin="anonymous"
+
+                    onLoad={() => {
+                        console.log("CAMERA LOADED");
+                        console.log("width:", imageRef.current?.naturalWidth);
+                        console.log("height:", imageRef.current?.naturalHeight);
+                    }}
+
+                    onError={(e) => {
+                        console.error("CAMERA ERROR", e);
+                        setError("Camera stream failed");
+                    }}
+
                     style={styles.video}
                 />
 
                 <div style={styles.status}>
                     {saving && <div>Saving photo...</div>}
 
-                    {photoPath && ( <div> Photo saved </div> )}
+                    {photoPath && (<div> Photo saved </div>)}
                 </div>
                 <Buttons.cam
                     title=""

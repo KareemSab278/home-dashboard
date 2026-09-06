@@ -45,21 +45,17 @@ pub fn save_photo(app: AppHandle, data: Vec<u8>) -> Result<String, String> {
         .format("%Y-%m-%d_%H-%M-%S-%3f")
         .to_string();
 
-    let file_path: PathBuf =
-        camera_dir.join(format!("photo_{}.jpg", timestamp));
+    let file_path: PathBuf = camera_dir.join(format!("photo_{}.jpg", timestamp));
 
-    fs::write(&file_path, data)
-        .map_err(|e| format!("Could not save photo: {}", e))?;
+    fs::write(&file_path, data).map_err(|e| format!("Could not save photo: {}", e))?;
     println!("Photo saved at {:?}", file_path);
 
     Ok(file_path.to_string_lossy().to_string())
 }
 
 #[tauri::command]
-pub fn start_camera_stream(
-    state: tauri::State<'_, CameraState>,
-) -> Result<String, String> {
-    ensure_proxy_started(&state);
+pub fn start_camera_stream(state: tauri::State<'_, CameraState>) -> Result<String, String> {
+    ensure_proxy_started(&state)?;
 
     let mut process = state
         .process
@@ -90,16 +86,24 @@ pub fn start_camera_stream(
 
     let child = Command::new("ffmpeg")
         .args([
-            "-f", "v4l2",
-            "-input_format", "mjpeg",
-            "-framerate", "30",
-            "-video_size", "640x480",
-            "-i", CAMERA_DEVICE,
+            "-f",
+            "v4l2",
+            "-input_format",
+            "mjpeg",
+            "-framerate",
+            "30",
+            "-video_size",
+            "640x480",
+            "-i",
+            CAMERA_DEVICE,
             // Camera already outputs MJPEG. Do not decode/re-encode it.
-            "-c:v", "copy",
+            "-c:v",
+            "copy",
             // HTTP multipart MJPEG stream.
-            "-f", "mpjpeg",
-            "-listen", "1",
+            "-f",
+            "mpjpeg",
+            "-listen",
+            "1",
             &format!("http://{}", FFMPEG_ADDR),
         ])
         .spawn()
@@ -113,9 +117,7 @@ pub fn start_camera_stream(
 }
 
 #[tauri::command]
-pub fn stop_camera_stream(
-    state: tauri::State<'_, CameraState>,
-) -> Result<(), String> {
+pub fn stop_camera_stream(state: tauri::State<'_, CameraState>) -> Result<(), String> {
     stop_camera_process(&state)
 }
 
@@ -134,58 +136,55 @@ pub fn stop_camera_process(state: &CameraState) -> Result<(), String> {
     Ok(())
 }
 
-fn ensure_proxy_started(state: &CameraState) {
-    let mut started = match state.proxy_started.lock() {
-        Ok(guard) => guard,
-        Err(_) => return,
-    };
+fn ensure_proxy_started(state: &CameraState) -> Result<(), String> {
+    let mut started = state
+        .proxy_started
+        .lock()
+        .map_err(|_| "Could not lock proxy state".to_string())?;
 
     if *started {
-        return;
+        return Ok(());
     }
 
-    let listener = match TcpListener::bind(PROXY_ADDR) {
-        Ok(listener) => listener,
-        Err(e) => {
-            eprintln!("Could not bind camera proxy on {}: {}", PROXY_ADDR, e);
-            return;
-        }
-    };
+    let listener = TcpListener::bind(PROXY_ADDR)
+        .map_err(|e| format!("Could not bind camera proxy on {}: {}", PROXY_ADDR, e))?;
 
     thread::spawn(move || {
+        println!("Camera proxy listening on {}", PROXY_ADDR);
+
         for incoming in listener.incoming() {
-            if let Ok(client) = incoming {
-                thread::spawn(move || proxy_client(client));
+            match incoming {
+                Ok(client) => {
+                    thread::spawn(move || proxy_client(client));
+                }
+                Err(e) => {
+                    eprintln!("Camera proxy connection error: {}", e);
+                }
             }
         }
     });
 
     *started = true;
+
+    Ok(())
 }
 
 // Relays the MJPEG stream from ffmpeg to a single WebView client, injecting a
 // permissive CORS header so the frame can be captured onto a canvas.
 fn proxy_client(client: TcpStream) {
-    let upstream = match TcpStream::connect(FFMPEG_ADDR) {
-        Ok(stream) => stream,
-        Err(_) => {
-            let _ = (&client).write_all(
-                b"HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
-            );
-            return;
-        }
+    let mut client_reader = match client.try_clone() {
+        Ok(clone) => BufReader::new(clone),
+        Err(_) => return,
     };
 
-    // Drain the client's request before relaying anything upstream.
-    let mut client_reader = BufReader::new(match client.try_clone() {
-        Ok(clone) => clone,
-        Err(_) => return,
-    });
+    // Read and discard the client's HTTP request.
     let mut line = String::new();
+
     loop {
         line.clear();
+
         match client_reader.read_line(&mut line) {
-            Ok(0) | Err(_) => break,
+            Ok(0) | Err(_) => return,
             Ok(_) => {
                 if line == "\r\n" || line == "\n" {
                     break;
@@ -194,28 +193,77 @@ fn proxy_client(client: TcpStream) {
         }
     }
 
+    // Give FFmpeg time to start listening.
+    let upstream = {
+        let mut stream = None;
+
+        for _ in 0..50 {
+            match TcpStream::connect(FFMPEG_ADDR) {
+                Ok(s) => {
+                    stream = Some(s);
+                    break;
+                }
+                Err(_) => {
+                    thread::sleep(std::time::Duration::from_millis(100));
+                }
+            }
+        }
+
+        match stream {
+            Some(s) => s,
+            None => {
+                let mut client_writer = client;
+
+                let _ = client_writer.write_all(
+                    b"HTTP/1.1 502 Bad Gateway\r\n\
+                      Content-Length: 0\r\n\
+                      Connection: close\r\n\
+                      \r\n",
+                );
+
+                return;
+            }
+        }
+    };
+
+    // Ask FFmpeg for its MJPEG stream.
     let mut upstream_writer = match upstream.try_clone() {
         Ok(clone) => clone,
         Err(_) => return,
     };
-    if upstream_writer.write_all(b"GET / HTTP/1.0\r\n\r\n").is_err() {
+
+    if upstream_writer
+        .write_all(b"GET / HTTP/1.0\r\nHost: localhost\r\n\r\n")
+        .is_err()
+    {
         return;
     }
 
     let mut upstream_reader = BufReader::new(upstream);
     let mut client_writer = client;
 
-    // Relay ffmpeg's response headers, adding CORS support before the blank line.
+    // Forward FFmpeg's response headers.
     loop {
         let mut header_line = String::new();
+
         match upstream_reader.read_line(&mut header_line) {
             Ok(0) | Err(_) => return,
             Ok(_) => {}
         }
 
         if header_line == "\r\n" || header_line == "\n" {
-            let _ = client_writer.write_all(b"Access-Control-Allow-Origin: *\r\n");
-            let _ = client_writer.write_all(b"\r\n");
+            // CORS header must be BEFORE the final blank line.
+            if client_writer
+                .write_all(b"Access-Control-Allow-Origin: *\r\n")
+                .is_err()
+            {
+                return;
+            }
+
+            if client_writer.write_all(b"\r\n").is_err() {
+                return;
+            }
+
             break;
         }
 
@@ -224,7 +272,9 @@ fn proxy_client(client: TcpStream) {
         }
     }
 
+    // Stream the MJPEG bytes.
     let mut buffer = [0u8; 8192];
+
     loop {
         let bytes_read = match upstream_reader.read(&mut buffer) {
             Ok(0) | Err(_) => return,
